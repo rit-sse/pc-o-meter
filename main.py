@@ -9,7 +9,7 @@ DEBUG_FLAG = True
 RPIO.setmode(RPIO.BCM)
 
 # Pin numbers
-servo_pin = 17
+servo_pin = 18
 
 trigger_pin = 22
 button1_pin = 23
