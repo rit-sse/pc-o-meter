@@ -1,12 +1,13 @@
-import RPIO
-from RPIO import PWM
 from time import sleep
+import wiringpi2 # For harware PWM for the servo
+import RPi.GPIO as GPIO # For general GPIO
 
 # Debug mode
 DEBUG_FLAG = True
 
 # Use BCM numbering on the RPi
-RPIO.setmode(RPIO.BCM)
+wiringpi2.wiringPiSetupGpio()
+GPIO.setmode(GPIO.BCM)
 
 # Pin numbers
 servo_pin = 18
@@ -17,22 +18,29 @@ button2_pin = 24
 button3_pin = 25
 
 # Pin configuration
-#TODO, change to pull down, based on the receiver pinout
-RPIO.setup(trigger_pin, RPIO.IN, pull_up_down=RPIO.PUD_UP)
-RPIO.setup(button1_pin, RPIO.IN, pull_up_down=RPIO.PUD_DOWN)
-RPIO.setup(button2_pin, RPIO.IN, pull_up_down=RPIO.PUD_DOWN)
-RPIO.setup(button3_pin, RPIO.IN, pull_up_down=RPIO.PUD_DOWN)
+#TODO, change all to pull down, based on the receiver pinout
+GPIO.setup(trigger_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(button1_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(button2_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(button3_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-# Servo configuration
+# Servo configuration, with hardware PWM
+wiringpi2.pinMode(servo_pin, wiringpi2.GPIO.PWM_OUTPUT)
+wiringpi2.pwmSetMode(wiringpi2.GPIO.PWM_MODE_MS)
+wiringpi2.pwmSetClock(384)
+wiringpi2.pwmSetRange(1000)
+
 servo_angle_range = (0, 180)
-servo_microsec_range = (550, 2400)
-RPIO.setup(servo_pin, RPIO.OUT)
-servo = PWM.Servo(pulse_incr_us=1)
+servo_pwm_range = (28, 120)
 
-# Global current angle
-current_angle = 0
+# Servo decay configuration
+servo_decay_delay = 2 # Delay, in seconds, before starting the decay
+servo_decay_speed = 0.025 # Rate of decay. Smaller numbers = quicker decay
 
-scaler = None
+# Globals
+current_angle = 0 # Current servo angle
+current_delay = False # Currently delaying for the decay
+scaler = None # Scaling function
 
 
 """
@@ -54,6 +62,7 @@ def make_interpolater(left_min, left_max, right_min, right_max):
 
     return interp_fn
 
+
 """
 Set the servo to the given angle.
 """
@@ -65,68 +74,74 @@ def update_servo_angle(angle):
     if scaler is None:
         scaler = make_interpolater(
             servo_angle_range[0], servo_angle_range[1], 
-            servo_microsec_range[0], servo_microsec_range[1])
+            servo_pwm_range[0], servo_pwm_range[1])
 
     # Ensure the angle is within the servo bounds
-    if angle < 0:
-        angle = 0
-    elif angle > 180:
-        angle = 180
+    if angle < servo_angle_range[0]:
+        angle = servo_angle_range[0]
+    elif angle > servo_angle_range[1]:
+        angle = servo_angle_range[1]
 
-    microsec = int(scaler(angle))
+    # Scale the angle
+    pulse = int(scaler(angle))
 
-    debug("Updating to: {0}, micro: {1}".format(angle, microsec))
-    servo.set_servo(servo_pin, microsec)
+    debug("Updating to: {0}, pulse: {1}".format(angle, pulse))
+    wiringpi2.pwmWrite(servo_pin, pulse)
     current_angle = angle
 
 
 """
 Called when any button is pressed.
 """
-def triggered(gpio_id, value):
+def triggered(channel):
 
     # Poll the button inputs to see what was pressed.
     #TODO, should each of these have their own interrupt instead?
     button_pressed = None
-    if RPIO.input(button1_pin):
+    if not GPIO.input(button1_pin): #TODO: remove not
         button_pressed = 1
-    elif RPIO.input(button2_pin):
+    elif GPIO.input(button2_pin):
         button_pressed = 2
-    elif RPIO.input(button3_pin):
+    elif GPIO.input(button3_pin):
         button_pressed = 3
     else:
         debug("Didn't catch that button press, but there was one...")
         #TODO, test/remove this line:
-        update_servo_angle(current_angle + 50)
+        #update_servo_angle(current_angle + 50)
         return
 
     debug("Button {0} pressed!".format(button_pressed))
     update_servo_angle(current_angle + 50)
+    set_delay()
 
+
+def set_delay(clear=False):
+    global current_delay
+    current_delay = not clear
 
 """
 Main entry point.
 """
 def main():
-    # Start the servo at 0
-    update_servo_angle(0)
+    # Start the servo at lowest servo bound
+    update_servo_angle(servo_angle_range[0])
 
     try:
         # Catch the trigger input
-        #TODO, change to pull down, based on the receiver pinout
-        RPIO.add_interrupt_callback(trigger_pin, triggered, edge="rising", pull_up_down=RPIO.PUD_UP, debounce_timeout_ms=50)
-
-        RPIO.wait_for_interrupts(threaded=True)
+        GPIO.add_event_detect(trigger_pin, GPIO.FALLING, callback=triggered, bouncetime=200) #TODO: RISING, because pull down.
 
         while True:
+            if current_delay:
+                set_delay(True)
+                sleep(servo_decay_delay)
             if current_angle > 0:
-                update_servo_angle(current_angle - 10)
-                sleep(1)
-
-    except:
-        raise
+                update_servo_angle(current_angle - 1)
+                sleep(servo_decay_speed)
     finally:
-        RPIO.cleanup()
+        # Cleanup
+        wiringpi2.pinMode(servo_pin, wiringpi2.GPIO.INPUT)
+        GPIO.cleanup()
+
 
 def debug(string):
     if DEBUG_FLAG:

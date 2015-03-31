@@ -1,4 +1,4 @@
 # pc-o-meter
 Automagical pc-o-meter for the SSE Lab.
 
-Uses [RPIO](http://pythonhosted.org/RPIO/), at least for now.
+Uses [WiringPi2](https://github.com/WiringPi/WiringPi2-Python) for the hardware PWM servo control.
