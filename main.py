@@ -16,6 +16,7 @@ trigger_pin = 22
 button1_pin = 23
 button2_pin = 24
 button3_pin = 25
+mentors_pin = 8
 
 # Pin configuration
 #TODO, change all to pull down, based on the receiver pinout
@@ -23,6 +24,7 @@ GPIO.setup(trigger_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(button1_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(button2_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(button3_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(mentors_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 # Servo configuration, with hardware PWM
 wiringpi2.pinMode(servo_pin, wiringpi2.GPIO.PWM_OUTPUT)
@@ -33,6 +35,10 @@ wiringpi2.pwmSetRange(1000)
 servo_angle_range = (0, 180)
 servo_pwm_range = (28, 120)
 
+wtf_angle = 45 # Amount to increase by for each button press
+
+mentor_mode_angles = (0, 45, 90, 135, 180) # Fixed angles for mentor mode
+
 # Servo decay configuration
 servo_decay_delay = 2 # Delay, in seconds, before starting the decay
 servo_decay_speed = 0.025 # Rate of decay. Smaller numbers = quicker decay
@@ -41,6 +47,7 @@ servo_decay_speed = 0.025 # Rate of decay. Smaller numbers = quicker decay
 current_angle = 0 # Current servo angle
 current_delay = False # Currently delaying for the decay
 scaler = None # Scaling function
+mentor_mode = 0 # Current mentor mode
 
 
 """
@@ -94,30 +101,64 @@ def update_servo_angle(angle):
 Called when any button is pressed.
 """
 def triggered(channel):
-
     # Poll the button inputs to see what was pressed.
     #TODO, should each of these have their own interrupt instead?
     button_pressed = None
-    if not GPIO.input(button1_pin): #TODO: remove not
+    if GPIO.input(mentors_pin):
+        debug("Mentor button pressed!")
+        mentor_button()
+        return
+    elif not GPIO.input(button1_pin): # TODO: remove not
         button_pressed = 1
     elif GPIO.input(button2_pin):
         button_pressed = 2
     elif GPIO.input(button3_pin):
         button_pressed = 3
     else:
-        debug("Didn't catch that button press, but there was one...")
-        #TODO, test/remove this line:
-        #update_servo_angle(current_angle + 50)
+        debug("Didn't catch which button was pressed...")
         return
 
     debug("Button {0} pressed!".format(button_pressed))
-    update_servo_angle(current_angle + 50)
+    update_servo_angle(current_angle + wtf_angle)
     set_delay()
 
 
-def set_delay(clear=False):
+def set_delay():
     global current_delay
-    current_delay = not clear
+    current_delay = True
+
+def clear_delay():
+    global current_delay
+    current_delay = False
+
+
+"""
+Called when the mentor button is pressed.
+
+Each press locks the meter at a given point in the mentor_mode_angles tuple.
+The final press resets the meter to normal mode.
+"""
+def mentor_button():
+    global mentor_mode
+
+    mentor_mode += 1
+
+    if mentor_mode > len(mentor_mode_angles):
+        debug("Exit mentor mode")
+        # Sweep the servo to signal exiting of mentor mode
+        update_servo_angle(servo_angle_range[0])
+        sleep(0.1)
+        for i in range(servo_angle_range[0], servo_angle_range[1], 2):
+            update_servo_angle(i)
+            sleep(0.005)
+        for i in range(servo_angle_range[1], servo_angle_range[0], -2):
+            update_servo_angle(i)
+            sleep(0.005)
+        update_servo_angle(servo_angle_range[0])
+        mentor_mode = 0
+    else:
+        update_servo_angle(mentor_mode_angles[mentor_mode - 1])
+
 
 """
 Main entry point.
@@ -131,8 +172,11 @@ def main():
         GPIO.add_event_detect(trigger_pin, GPIO.FALLING, callback=triggered, bouncetime=200) #TODO: RISING, because pull down.
 
         while True:
+            if mentor_mode != 0:
+                sleep(0.5) # Just to avoid complete "do-nothing" loop
+                continue
             if current_delay:
-                set_delay(True)
+                clear_delay()
                 sleep(servo_decay_delay)
             if current_angle > 0:
                 update_servo_angle(current_angle - 1)
