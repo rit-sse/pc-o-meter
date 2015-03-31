@@ -32,8 +32,8 @@ wiringpi2.pwmSetMode(wiringpi2.GPIO.PWM_MODE_MS)
 wiringpi2.pwmSetClock(384)
 wiringpi2.pwmSetRange(1000)
 
-servo_angle_range = (0, 180)
-servo_pwm_range = (28, 120)
+servo_angle_range = (0, 180) # Range of motion for the servo
+servo_pwm_range = (28, 120) # PWM range for the servo
 
 wtf_angle = 45 # Amount to increase by for each button press
 
@@ -47,7 +47,7 @@ servo_decay_speed = 0.025 # Rate of decay. Smaller numbers = quicker decay
 current_angle = 0 # Current servo angle
 current_delay = False # Currently delaying for the decay
 scaler = None # Scaling function
-mentor_mode = 0 # Current mentor mode
+mentor_mode = 0 # Mentor mode
 
 
 """
