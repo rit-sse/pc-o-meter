@@ -115,7 +115,7 @@ def triggered(channel):
     elif GPIO.input(button3_pin):
         button_pressed = 3
     else:
-        debug("Didn't catch which button was pressed...")
+        debug("Triggered, but didn't catch which button was pressed...")
         return
 
     debug("Button {0} pressed!".format(button_pressed))
@@ -123,10 +123,17 @@ def triggered(channel):
     set_delay()
 
 
+"""
+Enable the decay delay.
+"""
 def set_delay():
     global current_delay
     current_delay = True
 
+
+"""
+Disable the decay delay.
+"""
 def clear_delay():
     global current_delay
     current_delay = False
@@ -164,6 +171,7 @@ def mentor_button():
 Main entry point.
 """
 def main():
+    print("PC-O-Meter active...")
     # Start the servo at lowest servo bound
     update_servo_angle(servo_angle_range[0])
 
@@ -181,12 +189,18 @@ def main():
             if current_angle > 0:
                 update_servo_angle(current_angle - 1)
                 sleep(servo_decay_speed)
+    except KeyboardInterrupt:
+        pass
     finally:
+        print("PC-O-Meter exiting...")
         # Cleanup
         wiringpi2.pinMode(servo_pin, wiringpi2.GPIO.INPUT)
         GPIO.cleanup()
 
 
+"""
+Print the string, if debug mode is active.
+"""
 def debug(string):
     if DEBUG_FLAG:
         print(string)
