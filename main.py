@@ -19,9 +19,8 @@ button3_pin = 25
 mentors_pin = 8
 
 # Pin configuration
-#TODO, change all to pull down, based on the receiver pinout
-GPIO.setup(trigger_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(button1_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(trigger_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(button1_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(button2_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(button3_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(mentors_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -108,7 +107,7 @@ def triggered(channel):
         debug("Mentor button pressed!")
         mentor_button()
         return
-    elif not GPIO.input(button1_pin): # TODO: remove not
+    elif GPIO.input(button1_pin):
         button_pressed = 1
     elif GPIO.input(button2_pin):
         button_pressed = 2
@@ -177,7 +176,7 @@ def main():
 
     try:
         # Catch the trigger input
-        GPIO.add_event_detect(trigger_pin, GPIO.FALLING, callback=triggered, bouncetime=200) #TODO: RISING, because pull down.
+        GPIO.add_event_detect(trigger_pin, GPIO.RISING, callback=triggered, bouncetime=200)
 
         while True:
             if mentor_mode != 0:
