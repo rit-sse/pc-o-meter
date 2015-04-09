@@ -117,9 +117,10 @@ def triggered(channel):
         debug("Triggered, but didn't catch which button was pressed...")
         return
 
-    debug("Button {0} pressed!".format(button_pressed))
-    update_servo_angle(current_angle + wtf_angle)
-    set_delay()
+    if mentor_mode == 0 and button_pressed is not None:
+        debug("Button {0} pressed!".format(button_pressed))
+        update_servo_angle(current_angle + wtf_angle)
+        set_delay()
 
 
 """
