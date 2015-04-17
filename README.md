@@ -9,4 +9,4 @@ Uses [WiringPi2](https://github.com/WiringPi/WiringPi2-Python) for the hardware 
 
 
 ### Wiring Diagram
-![Wiring Diagram](http://i.imgur.com/MVKN4RK.png)
+![Wiring Diagram](http://i.imgur.com/n4PDjUj.png)
