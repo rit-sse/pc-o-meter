@@ -177,7 +177,7 @@ def main():
 
     try:
         # Catch the trigger input
-        GPIO.add_event_detect(trigger_pin, GPIO.RISING, callback=triggered, bouncetime=200)
+        GPIO.add_event_detect(trigger_pin, GPIO.RISING, callback=triggered, bouncetime=500)
 
         while True:
             if mentor_mode != 0:
