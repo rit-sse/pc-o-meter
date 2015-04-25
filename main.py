@@ -19,11 +19,10 @@ button3_pin = 25
 mentors_pin = 8
 
 # Pin configuration
-GPIO.setup(trigger_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(button1_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(button2_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(button3_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(mentors_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(
+    (trigger_pin, button1_pin, button2_pin, button3_pin, mentors_pin),
+    GPIO.IN, 
+    pull_up_down=GPIO.PUD_DOWN)
 
 # Servo configuration, with hardware PWM
 wiringpi2.pinMode(servo_pin, wiringpi2.GPIO.PWM_OUTPUT)
@@ -40,7 +39,7 @@ mentor_mode_angles = (0, 18, 54, 90, 126, 162, 180) # Fixed angles for mentor mo
 
 # Servo decay configuration
 servo_decay_delay = 2 # Delay, in seconds, before starting the decay
-servo_decay_speed = 0.025 # Rate of decay. Smaller numbers = quicker decay
+servo_decay_speed = 0.5 # Rate of decay. Smaller numbers = quicker decay
 
 # Globals
 current_angle = 0 # Current servo angle
@@ -177,7 +176,7 @@ def main():
 
     try:
         # Catch the trigger input
-        GPIO.add_event_detect(trigger_pin, GPIO.RISING, callback=triggered, bouncetime=500)
+        GPIO.add_event_detect(trigger_pin, GPIO.RISING, callback=triggered, bouncetime=400)
 
         while True:
             if mentor_mode != 0:
@@ -204,7 +203,6 @@ Print the string, if debug mode is active.
 def debug(string):
     if DEBUG_FLAG:
         print(string)
-
 
 if __name__ == "__main__":
     main()
