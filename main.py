@@ -33,7 +33,7 @@ wiringpi2.pwmSetClock(384)
 wiringpi2.pwmSetRange(1000)
 
 servo_angle_range = (0, 180) # Range of motion for the servo
-servo_pwm_range = (30, 120) # PWM range for the servo
+servo_pwm_range = (30, 118) # PWM range for the servo
 
 wtf_angle = 36 # Amount to increase by for each button press
 
