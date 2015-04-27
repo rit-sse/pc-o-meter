@@ -5,7 +5,7 @@ import wiringpi2 # For harware PWM for the servo
 import RPi.GPIO as GPIO # For general GPIO
 
 # Debug mode
-DEBUG_FLAG = True
+DEBUG_FLAG = False
 
 # Use BCM numbering on the RPi
 wiringpi2.wiringPiSetupGpio()
@@ -37,7 +37,7 @@ servo_pwm_range = (30, 120) # PWM range for the servo
 
 wtf_angle = 36 # Amount to increase by for each button press
 
-mentor_mode_angles = (0, 18, 54, 90, 126, 162, 180) # Fixed angles for mentor mode
+mentor_mode_angles = (0, 13, 51, 87, 127, 162, 180) # Fixed angles for mentor mode
 
 # Servo decay configuration
 servo_decay_delay = 2 # Delay, in seconds, before starting the decay
