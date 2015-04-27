@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from time import sleep
 import wiringpi2 # For harware PWM for the servo
 import RPi.GPIO as GPIO # For general GPIO
