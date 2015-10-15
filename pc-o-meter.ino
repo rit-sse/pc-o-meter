@@ -1,3 +1,13 @@
+/*
+ * PC-O-Meter logic and servo control.
+ *
+ * Developed for the Society of Software Engineers at
+ * Rochester Institute of Technology by
+ * Corban Mailloux.
+ *
+ * October 14, 2015
+ */
+
 // Servo configuration
 int servoPin = A4;
 int servoMin = 0;
@@ -15,7 +25,12 @@ int currentAngle = 0;
 
 void setup() {
     servo.attach(servoPin);
-    Particle.function("wtf", trigger);
+
+    // Expose a function, for POST requests
+    Particle.function("SSE_PC-O-Meter_Trigger", trigger);
+
+    // Subscribe to the buttons
+    Particle.subscribe("SSE_PC-O-Meter_Trigger", triggerSubscribe, MY_DEVICES);
     RGB.control(true);
 }
 
@@ -56,4 +71,8 @@ int trigger(String UNUSED) {
     updateServo(currentAngle + wtfAngle);
     lastPressTime = millis();
     return(currentAngle);
+}
+
+void triggerSubscribe(const char* UNUSED, const char* UNUSED2) {
+    trigger("");
 }
