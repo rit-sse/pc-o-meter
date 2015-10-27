@@ -26,12 +26,11 @@ current_delay = False # Currently delaying for the decay
 scaler = None # Scaling function
 
 
-"""
-From http://stackoverflow.com/a/1970037
-
-Creates a scaling function for the servo range.
-"""
 def make_interpolater(left_min, left_max, right_min, right_max): 
+    """Scaling function for the servo range.
+    
+    From http://stackoverflow.com/a/1970037
+    """
     # Figure out how 'wide' each range is  
     leftSpan = left_max - left_min  
     rightSpan = right_max - right_min  
@@ -46,10 +45,8 @@ def make_interpolater(left_min, left_max, right_min, right_max):
     return interp_fn
 
 
-"""
-Set the servo to the given angle.
-"""
 def update_servo_angle(angle):
+    """Set the servo to the given angle."""
     global current_angle
     global scaler
 
@@ -73,10 +70,8 @@ def update_servo_angle(angle):
     current_angle = angle
 
 
-"""
-Main entry point.
-"""
 def main():
+    """Main entry point."""
     print("Angle testing active...")
     # Start the servo at lowest servo bound
     update_servo_angle(servo_angle_range[0])
@@ -94,10 +89,8 @@ def main():
         wiringpi2.pinMode(servo_pin, wiringpi2.GPIO.INPUT)
 
 
-"""
-Print the string, if debug mode is active.
-"""
 def debug(string):
+    """Print the string, if debug mode is active."""
     if DEBUG_FLAG:
         print(string)
 
