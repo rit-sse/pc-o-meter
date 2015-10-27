@@ -28,6 +28,7 @@ scaler = None # Scaling function
 
 def make_interpolater(left_min, left_max, right_min, right_max): 
     """Scaling function for the servo range.
+    
     From http://stackoverflow.com/a/1970037
     """
     # Figure out how 'wide' each range is  
