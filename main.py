@@ -50,12 +50,11 @@ scaler = None # Scaling function
 mentor_mode = 0 # Mentor mode
 
 
-"""
-From http://stackoverflow.com/a/1970037
+def make_interpolater(left_min, left_max, right_min, right_max):
+    """Scaling function for the servo range.
 
-Creates a scaling function for the servo range.
-"""
-def make_interpolater(left_min, left_max, right_min, right_max): 
+    From http://stackoverflow.com/a/1970037
+    """
     # Figure out how 'wide' each range is  
     leftSpan = left_max - left_min  
     rightSpan = right_max - right_min  
@@ -70,10 +69,8 @@ def make_interpolater(left_min, left_max, right_min, right_max):
     return interp_fn
 
 
-"""
-Set the servo to the given angle.
-"""
 def update_servo_angle(angle):
+    """Set the servo to the given angle."""
     global current_angle
     global scaler
 
@@ -97,10 +94,8 @@ def update_servo_angle(angle):
     current_angle = angle
 
 
-"""
-Called when any button is pressed.
-"""
 def triggered(channel):
+    """Called when any button is pressed."""
     # Poll the button inputs to see what was pressed.
     #TODO, should each of these have their own interrupt instead?
     button_pressed = None
@@ -124,29 +119,24 @@ def triggered(channel):
         set_delay()
 
 
-"""
-Enable the decay delay.
-"""
 def set_delay():
+    """Enable the decay delay."""
     global current_delay
     current_delay = True
 
 
-"""
-Disable the decay delay.
-"""
 def clear_delay():
+    """Disable the decay delay."""
     global current_delay
     current_delay = False
 
 
-"""
-Called when the mentor button is pressed.
-
-Each press locks the meter at a given point in the mentor_mode_angles tuple.
-The final press resets the meter to normal mode.
-"""
 def mentor_button():
+    """Called when the mentor button is pressed.
+
+    Each press locks the meter at a given point in the mentor_mode_angles tuple.
+    The final press resets the meter to normal mode.
+    """
     global mentor_mode
 
     mentor_mode += 1
@@ -168,10 +158,8 @@ def mentor_button():
         update_servo_angle(mentor_mode_angles[mentor_mode - 1])
 
 
-"""
-Main entry point.
-"""
 def main():
+    """Main entry point."""
     print("PC-O-Meter active...")
     # Start the servo at lowest servo bound
     update_servo_angle(servo_angle_range[0])
@@ -199,10 +187,8 @@ def main():
         GPIO.cleanup()
 
 
-"""
-Print the string, if debug mode is active.
-"""
 def debug(string):
+    """Print the string, if debug mode is active."""
     if DEBUG_FLAG:
         print(string)
 
