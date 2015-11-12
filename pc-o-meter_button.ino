@@ -4,8 +4,6 @@
  * Developed for the Society of Software Engineers at
  * Rochester Institute of Technology by
  * Corban Mailloux.
- *
- * October 14, 2015
  */
 
 // Unique value for each of the buttons.
@@ -24,7 +22,7 @@ void loop() {
 
     // TODO: Switch to an interrupt?
     if (digitalRead(buttonPin) == LOW) {
-        Particle.publish("SSE_PC-O-Meter_Trigger", String(buttonNumber), PRIVATE);
+        Particle.publish("pc-trigger", String(buttonNumber), PRIVATE);
         RGB.color(255, 0, 0);
 
         // Debounce

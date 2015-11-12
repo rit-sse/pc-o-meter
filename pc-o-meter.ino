@@ -4,14 +4,12 @@
  * Developed for the Society of Software Engineers at
  * Rochester Institute of Technology by
  * Corban Mailloux.
- *
- * October 14, 2015
  */
 
 // Servo configuration
 int servoPin = A4;
-int servoMin = 0;
-int servoMax = 160;
+int servoMin = 4;
+int servoMax = 177;
 int wtfAngle = 20; // Angle to increase by for each button press
 
 // Decay configuration
@@ -25,12 +23,13 @@ int currentAngle = 0;
 
 void setup() {
     servo.attach(servoPin);
+    servo.write(servoMin);
 
     // Expose a function, for POST requests
-    Particle.function("SSE_PC-O-Meter_Trigger", trigger);
+    Particle.function("pc-trigger", trigger);
 
     // Subscribe to the buttons
-    Particle.subscribe("SSE_PC-O-Meter_Trigger", triggerSubscribe, MY_DEVICES);
+    Particle.subscribe("pc-trigger", triggerSubscribe, MY_DEVICES);
     RGB.control(true);
 }
 
