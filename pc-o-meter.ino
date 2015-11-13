@@ -16,14 +16,27 @@ int wtfAngle = 20; // Angle to increase by for each button press
 int servoDecayDelay = 2000; // Delay after button press before decay
 int servoDecaySpeed = 250; // Decay rate; smaller = faster decay
 
-
+bool mentoringMode = false;
 unsigned long lastPressTime;
 Servo servo;
 int currentAngle = 0;
 
+int numberOfWedges = 5;
+int wedgeBottoms[6];
+
 void setup() {
+    // Setup the servo
     servo.attach(servoPin);
     servo.write(servoMin);
+    for (int i = 0; i < numberOfWedges; i++)
+    {
+        wedgeBottoms[i] = ((i / 5.0) * (servoMax - servoMin)) + servoMin;
+    }
+
+
+    // Mentoring mode
+    Particle.function("pc-lock", mentoringLock);
+    Particle.function("pc-unlock", mentoringUnlock);
 
     // Expose a function, for POST requests
     Particle.function("pc-trigger", trigger);
@@ -35,22 +48,28 @@ void setup() {
 
 void loop() {
     // Update light color
-    if (currentAngle >= (0.8 * servoMax)) {
+    if (currentAngle >= wedgeBottoms[4]) {
         RGB.color(255, 0, 0);
-    } else if (currentAngle >= (0.6 * servoMax)) {
+    } else if (currentAngle >= wedgeBottoms[3]) {
         RGB.color(255, 128, 0);
-    } else if (currentAngle >= (0.4 * servoMax)) {
+    } else if (currentAngle >= wedgeBottoms[2]) {
         RGB.color(255, 255, 0);
-    } else if (currentAngle >= (0.2 * servoMax)) {
+    } else if (currentAngle >= wedgeBottoms[1]) {
         RGB.color(0, 255, 0);
     } else {
         RGB.color(0, 0, 255);
     }
 
-    if ((millis() - lastPressTime) >= servoDecayDelay) {
-        if (currentAngle > servoMin) {
-            updateServo(currentAngle - 1);
-            delay(servoDecaySpeed);
+    if (mentoringMode){
+        delay(500);
+    }
+    else
+    {
+        if ((millis() - lastPressTime) >= servoDecayDelay) {
+            if (currentAngle > servoMin) {
+                updateServo(currentAngle - 1);
+                delay(servoDecaySpeed);
+            }
         }
     }
 }
@@ -67,6 +86,10 @@ void updateServo(int angle) {
 }
 
 int trigger(String UNUSED) {
+    if (mentoringMode)
+    {
+        return(-1);
+    }
     updateServo(currentAngle + wtfAngle);
     lastPressTime = millis();
     return(currentAngle);
@@ -74,4 +97,20 @@ int trigger(String UNUSED) {
 
 void triggerSubscribe(const char* UNUSED, const char* UNUSED2) {
     trigger("");
+}
+
+// Mentoring mode lock: lock the needle in the current position, or in a given wedge.
+int mentoringLock(String zoneString) {
+    mentoringMode = true;
+    int zone = zoneString.toInt(); // Returns 0 is the conversion fails.
+    
+    if (zone > 0)
+    {
+        updateServo(wedgeBottoms[zone - 1] + (0.1 * (servoMax - servoMin)));
+    }
+}
+
+int mentoringUnlock(String UNUSED) {
+    mentoringMode = false;
+    updateServo(servoMin);
 }
