@@ -7,43 +7,48 @@
  */
 
 // Servo configuration
-int servoPin = A4;
-int servoMin = 4;
-int servoMax = 177;
-int wtfAngle = 20; // Angle to increase by for each button press
+const int servoPin = A4;
+const int servoMin = 4; // Minimum angle (ideally 0)
+const int servoMax = 177; // Maximum angle (ideally 180)
+const int wtfAngle = 20; // Angle to increase by for each button press
 
 // Decay configuration
-int servoDecayDelay = 2000; // Delay after button press before decay
-int servoDecaySpeed = 250; // Decay rate; smaller = faster decay
+const int servoDecayDelay = 2000; // Delay after button press before decay
+const int servoDecaySpeed = 250; // Decay rate; smaller = faster decay
 
+// Layout configuration
+const int numberOfWedges = 5;
+
+
+// Globals
+int wedgeBottoms[numberOfWedges]; // Calculated degrees of the wedges
 bool mentoringMode = false;
-unsigned long lastPressTime;
+unsigned long lastPressTime; // millis() when the last trigger happened
 Servo servo;
 int currentAngle = 0;
-
-int numberOfWedges = 5;
-int wedgeBottoms[6];
 
 void setup() {
     // Setup the servo
     servo.attach(servoPin);
     servo.write(servoMin);
+
+    // Calculate the bottoms of the wedges
     for (int i = 0; i < numberOfWedges; i++)
     {
-        wedgeBottoms[i] = ((i / 5.0) * (servoMax - servoMin)) + servoMin;
+        wedgeBottoms[i] = ((i / (float)numberOfWedges) * (servoMax - servoMin)) + servoMin;
     }
 
-
-    // Mentoring mode
+    // Expose POST functions for mentoring mode
     Particle.function("pc-lock", mentoringLock);
     Particle.function("pc-unlock", mentoringUnlock);
 
-    // Expose a function, for POST requests
+    // Expose POST function for triggers
     Particle.function("pc-trigger", trigger);
 
-    // Subscribe to the buttons
+    // Subscribe to the buttons for triggers
     Particle.subscribe("pc-trigger", triggerSubscribe, MY_DEVICES);
-    RGB.control(true);
+    
+    RGB.control(true); // Take over the on-board RGB LED
 }
 
 void loop() {
@@ -60,6 +65,7 @@ void loop() {
         RGB.color(0, 0, 255);
     }
 
+    // Don't update the meter in mentoring mode.
     if (mentoringMode){
         delay(500);
     }
@@ -74,6 +80,7 @@ void loop() {
     }
 }
 
+// Set the servo to the given angle and update currentAngle
 void updateServo(int angle) {
     if (angle < servoMin) {
         angle = servoMin;
@@ -85,16 +92,20 @@ void updateServo(int angle) {
     servo.write(currentAngle);
 }
 
+// Bump up the angle by one WTF
 int trigger(String UNUSED) {
+	// Block inputs in mentoring mode
     if (mentoringMode)
     {
         return(-1);
     }
+
     updateServo(currentAngle + wtfAngle);
     lastPressTime = millis();
     return(currentAngle);
 }
 
+// Pass-through for the subscribe trigger
 void triggerSubscribe(const char* UNUSED, const char* UNUSED2) {
     trigger("");
 }
@@ -106,10 +117,11 @@ int mentoringLock(String zoneString) {
     
     if (zone > 0)
     {
-        updateServo(wedgeBottoms[zone - 1] + (0.1 * (servoMax - servoMin)));
+        updateServo(wedgeBottoms[zone - 1] + ((1.0 / (2 * numberOfWedges)) * (servoMax - servoMin)));
     }
 }
 
+// Mentoring unlock: restore normal functionality
 int mentoringUnlock(String UNUSED) {
     mentoringMode = false;
     updateServo(servoMin);

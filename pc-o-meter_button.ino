@@ -7,9 +7,9 @@
  */
 
 // Unique value for each of the buttons.
-int buttonNumber = 1;
+const int buttonNumber = 1;
 
-int buttonPin = D1;
+const int buttonPin = D1;
 
 void setup() {
     pinMode(buttonPin, INPUT_PULLUP);
@@ -25,10 +25,13 @@ void loop() {
         Particle.publish("pc-trigger", String(buttonNumber), PRIVATE);
         RGB.color(255, 0, 0);
 
-        // Debounce
+        // Avoid multiple triggers
         while (digitalRead(buttonPin) == LOW) {
             // Do nothing
-            delay(200);
+            delay(100);
         }
+
+        // Debounce
+        delay(100);
     }
 }
