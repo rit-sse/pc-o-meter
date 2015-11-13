@@ -54,15 +54,15 @@ void setup() {
 void loop() {
     // Update light color
     if (currentAngle >= wedgeBottoms[4]) {
-        RGB.color(255, 0, 0);
+        RGB.color(255, 0, 0); // Red
     } else if (currentAngle >= wedgeBottoms[3]) {
-        RGB.color(255, 128, 0);
+        RGB.color(255, 128, 0); // Orange
     } else if (currentAngle >= wedgeBottoms[2]) {
-        RGB.color(255, 255, 0);
+        RGB.color(255, 255, 0); // Yellow
     } else if (currentAngle >= wedgeBottoms[1]) {
-        RGB.color(0, 255, 0);
+        RGB.color(0, 255, 0); // Green
     } else {
-        RGB.color(0, 0, 255);
+        RGB.color(0, 0, 255); // Blue
     }
 
     // Don't update the meter in mentoring mode.
@@ -115,7 +115,10 @@ int mentoringLock(String zoneString) {
     mentoringMode = true;
     int zone = zoneString.toInt(); // Returns 0 is the conversion fails.
     
-    if (zone > 0)
+    // Inform the buttons that mentoring mode is on.
+    Particle.publish("pc-b-lock-y", String(zone), PRIVATE);
+    
+    if ((zone > 0) && (zone <= numberOfWedges))
     {
         updateServo(wedgeBottoms[zone - 1] + ((1.0 / (2 * numberOfWedges)) * (servoMax - servoMin)));
     }
@@ -124,5 +127,9 @@ int mentoringLock(String zoneString) {
 // Mentoring unlock: restore normal functionality
 int mentoringUnlock(String UNUSED) {
     mentoringMode = false;
+
+    // Inform the buttons that mentoring mode is off.
+    Particle.publish("pc-b-lock-n", "", PRIVATE);
+
     updateServo(servoMin);
 }
