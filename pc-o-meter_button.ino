@@ -18,7 +18,15 @@ int mentoringZone = 0;
 unsigned long blinkTime; // millis() since the last blink
 bool blinkOn = false;
 
-void setup() {
+// Globals for button debouncing
+int buttonCounter = 0; // how many times we have seen new value
+int buttonReading; // the current value read from the input pin
+int currentButtonState = LOW; // the debounced input value
+long lastButtonSampleTime = 0; // the last time the output pin was sampled
+int debounceCount = 10; // number of millis/samples before a stable value
+
+void setup()
+{
     pinMode(buttonPin, INPUT_PULLUP);
     RGB.control(true);
 
@@ -26,11 +34,13 @@ void setup() {
     Particle.subscribe("pc-b-lock-", mentoringSubscribe, MY_DEVICES);
 }
 
-void loop() {
+void loop()
+{
     if (mentoringMode)
     {
         // Non-blocking delay
-        if ((millis() - blinkTime) >= (blinkRate / 2)) {
+        if ((millis() - blinkTime) >= (blinkRate / 2))
+        {
             if (blinkOn)
             {
                 // Turn off the LED
@@ -71,19 +81,31 @@ void loop() {
         // Update light color
         RGB.color(0, 255, 0);
 
-        // TODO: Switch to an interrupt?
-        if (digitalRead(buttonPin) == LOW) {
-            Particle.publish("pc-trigger", String(buttonNumber), PRIVATE);
-            RGB.color(255, 0, 0);
+        // Handle button presses
+        if (millis() != lastButtonSampleTime) { // At most once per ms
+            buttonReading = digitalRead(buttonPin);
 
-            // Avoid multiple triggers
-            while (digitalRead(buttonPin) == LOW) {
-                // Do nothing
-                delay(100);
+            // If the old state equals the new state...
+            if (buttonReading == currentButtonState) {
+                // Keep buttonCounter >= 0
+                buttonCounter = (buttonCounter > 0) ? (buttonCounter - 1) : 0;
+            }
+            else { // If the state has changed...
+                buttonCounter++; 
             }
 
-            // Debounce
-            delay(100);
+            // Stable value
+            if (buttonCounter >= debounceCount) {
+                buttonCounter = 0;
+                currentButtonState = buttonReading;
+
+                if (currentButtonState == LOW) {
+                    Particle.publish("pc-trigger", String(buttonNumber), PRIVATE);
+                    RGB.color(255, 0, 0);
+                }
+            }
+
+            lastButtonSampleTime = millis();
         }
     }
 }
