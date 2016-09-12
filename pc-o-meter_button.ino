@@ -23,7 +23,7 @@ int buttonCounter = 0; // how many times we have seen new value
 int buttonReading; // the current value read from the input pin
 int currentButtonState = LOW; // the debounced input value
 long lastButtonSampleTime = 0; // the last time the output pin was sampled
-int debounceCount = 10; // number of millis/samples before a stable value
+int debounceCount = 50; // number of millis/samples before a stable value
 
 void setup()
 {
